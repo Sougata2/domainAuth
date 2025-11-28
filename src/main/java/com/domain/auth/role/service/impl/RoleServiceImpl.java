@@ -4,6 +4,7 @@ import com.domain.auth.role.dto.RoleDto;
 import com.domain.auth.role.entity.RoleEntity;
 import com.domain.auth.role.repository.RoleRepository;
 import com.domain.auth.role.service.RoleService;
+import com.domain.mapper.service.MapperService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,20 +17,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
     private final RoleRepository repository;
+    private final MapperService mapper;
 
     @Override
     public List<RoleDto> findAll() {
         try {
             List<RoleEntity> entities = repository.findAll();
-            return entities.stream().map(e -> RoleDto.builder()
-                    .id(e.getId())
-                    .name(e.getName())
-                    .defaultRoleUsers(e.getDefaultRoleUsers())
-                    .users(e.getUsers())
-                    .createdAt(e.getCreatedAt())
-                    .updatedAt(e.getUpdatedAt())
-                    .build()
-            ).toList();
+            return entities.stream().map(e -> (RoleDto) mapper.toDto(e)).toList();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -42,14 +36,7 @@ public class RoleServiceImpl implements RoleService {
             if (entity.isEmpty()) {
                 throw new EntityNotFoundException("Role with id %d not found".formatted(id));
             }
-            return RoleDto.builder()
-                    .id(entity.get().getId())
-                    .name(entity.get().getName())
-                    .defaultRoleUsers(entity.get().getDefaultRoleUsers())
-                    .users(entity.get().getUsers())
-                    .createdAt(entity.get().getCreatedAt())
-                    .updatedAt(entity.get().getUpdatedAt())
-                    .build();
+            return (RoleDto) mapper.toDto(entity.get());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -62,14 +49,8 @@ public class RoleServiceImpl implements RoleService {
             if (entity.isEmpty()) {
                 throw new EntityNotFoundException("Role with name %s not found".formatted(name));
             }
-            return RoleDto.builder()
-                    .id(entity.get().getId())
-                    .name(entity.get().getName())
-                    .defaultRoleUsers(entity.get().getDefaultRoleUsers())
-                    .users(entity.get().getUsers())
-                    .createdAt(entity.get().getCreatedAt())
-                    .updatedAt(entity.get().getUpdatedAt())
-                    .build();
+
+            return (RoleDto) mapper.toDto(entity.get());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -79,16 +60,9 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RoleDto create(RoleDto dto) {
         try {
-            RoleEntity entity = RoleEntity.builder().name(dto.name()).build();
+            RoleEntity entity = RoleEntity.builder().name(dto.getName()).build();
             RoleEntity saved = repository.save(entity);
-            return RoleDto.builder()
-                    .id(saved.getId())
-                    .name(saved.getName())
-                    .defaultRoleUsers(saved.getDefaultRoleUsers())
-                    .users(saved.getUsers())
-                    .createdAt(saved.getCreatedAt())
-                    .updatedAt(saved.getUpdatedAt())
-                    .build();
+            return (RoleDto) mapper.toDto(saved);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -102,9 +76,9 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleDto delete(RoleDto dto) {
         try {
-            Optional<RoleEntity> entity = repository.findById(dto.id());
+            Optional<RoleEntity> entity = repository.findById(dto.getId());
             if (entity.isEmpty()) {
-                throw new EntityNotFoundException("Role with id %d not found".formatted(dto.id()));
+                throw new EntityNotFoundException("Role with id %d not found".formatted(dto.getId()));
             }
 
             repository.delete(entity.get());

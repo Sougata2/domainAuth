@@ -1,6 +1,7 @@
 package com.domain.auth.user.entity;
 
 import com.domain.auth.role.entity.RoleEntity;
+import com.domain.mapper.references.MasterEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -17,7 +18,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
-public class UserEntity {
+public class UserEntity implements MasterEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

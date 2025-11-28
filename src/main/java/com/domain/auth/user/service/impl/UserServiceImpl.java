@@ -4,6 +4,7 @@ import com.domain.auth.user.dto.UserDto;
 import com.domain.auth.user.entity.UserEntity;
 import com.domain.auth.user.repository.UserRepository;
 import com.domain.auth.user.service.UserService;
+import com.domain.mapper.service.MapperService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository repository;
+    private final MapperService mapper;
 
     @Override
     public UserDto findByEmail(String email) {
@@ -22,16 +24,7 @@ public class UserServiceImpl implements UserService {
             if (entity.isEmpty()) {
                 throw new EntityNotFoundException("User with email %s not found".formatted(email));
             }
-            return UserDto.builder()
-                    .id(entity.get().getId())
-                    .firstName(entity.get().getFirstName())
-                    .lastName(entity.get().getLastName())
-                    .email(entity.get().getEmail())
-                    .roles(entity.get().getRoles())
-                    .defaultRole(entity.get().getDefaultRole())
-                    .createdAt(entity.get().getCreatedAt())
-                    .updatedAt(entity.get().getUpdatedAt())
-                    .build();
+            return (UserDto) mapper.toDto(entity.get());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

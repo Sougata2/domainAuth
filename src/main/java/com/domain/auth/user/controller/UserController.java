@@ -22,6 +22,6 @@ public class UserController {
 
     @GetMapping("/get-default-role/{username}")
     public ResponseEntity<String> getDefaultRole(@PathVariable(value = "username") String email) {
-        return ResponseEntity.ok(service.findByEmail(email).defaultRole().getName());
+        return ResponseEntity.ok(service.findByEmail(email).getDefaultRole().getName());
     }
 }

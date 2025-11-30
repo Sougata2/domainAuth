@@ -60,7 +60,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RoleDto create(RoleDto dto) {
         try {
-            RoleEntity entity = RoleEntity.builder().name(dto.getName()).build();
+            RoleEntity entity = (RoleEntity) mapper.toEntity(dto);
             RoleEntity saved = repository.save(entity);
             return (RoleDto) mapper.toDto(saved);
         } catch (Exception e) {

@@ -70,7 +70,18 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public RoleDto update(RoleDto dto) {
-        return null;
+        try {
+            Optional<RoleEntity> og = repository.findById(dto.getId());
+            if (og.isEmpty()) {
+                throw new EntityNotFoundException("Role with id %d not found".formatted(dto.getId()));
+            }
+            RoleEntity nu = (RoleEntity) mapper.toEntity(dto);
+            RoleEntity merged = (RoleEntity) mapper.merge(og.get(), nu);
+            RoleEntity saved = repository.save(merged);
+            return (RoleDto) mapper.toDto(saved);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

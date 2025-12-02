@@ -37,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthDto login(LoginDto loginDto) {
         try {
             UserDetails user = authenticate(loginDto.email(), loginDto.password());
-            String token = jwtService.generateToken(user.getUsername(), user.getAuthorities().stream().toList().getFirst().toString());
+            String token = jwtService.generateToken(user.getUsername());
             return new AuthDto(user.getUsername(), token, LocalDateTime.now().plusSeconds(jwtProperties.getExpiration() / 1000));
         } catch (Exception e) {
             throw new RuntimeException(e);

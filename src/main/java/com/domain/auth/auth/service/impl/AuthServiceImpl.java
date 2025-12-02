@@ -10,7 +10,9 @@ import com.domain.auth.user.entity.UserEntity;
 import com.domain.auth.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
@@ -28,7 +30,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
 
     @Override
-    public UserDetails authenticate(String username, String password) {
+    public UserDetails authenticate(String username, String password) throws AuthenticationException {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         return userDetailsService.loadUserByUsername(username);
     }
@@ -39,6 +41,8 @@ public class AuthServiceImpl implements AuthService {
             UserDetails user = authenticate(loginDto.email(), loginDto.password());
             String token = jwtService.generateToken(user.getUsername());
             return new AuthDto(user.getUsername(), token, LocalDateTime.now().plusSeconds(jwtProperties.getExpiration() / 1000));
+        } catch (AuthenticationException e) {
+            throw new BadCredentialsException("Bad credentials");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

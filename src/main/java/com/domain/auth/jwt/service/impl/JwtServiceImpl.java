@@ -19,9 +19,8 @@ public class JwtServiceImpl implements JwtService {
     private final JwtProperties properties;
 
     @Override
-    public String generateToken(String username, String role) {
+    public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
 
         return Jwts.builder()
                 .setClaims(claims)

@@ -4,6 +4,7 @@ import com.domain.auth.auth.dto.AuthDto;
 import com.domain.auth.auth.dto.LoginDto;
 import com.domain.auth.auth.dto.RegisterDto;
 import com.domain.auth.auth.service.AuthService;
+import com.domain.auth.user.dto.UserDto;
 import com.domain.auth.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,5 +32,10 @@ public class AuthController {
     @GetMapping("/verify-user/{username}")
     public ResponseEntity<String> verifyUser(@PathVariable(value = "username") String email) {
         return ResponseEntity.ok(userService.findByEmail(email).getDefaultRole().getName());
+    }
+
+    @PostMapping("/validate")
+    public ResponseEntity<UserDto> validate(@RequestBody AuthDto dto) {
+        return ResponseEntity.ok(authService.validate(dto));
     }
 }

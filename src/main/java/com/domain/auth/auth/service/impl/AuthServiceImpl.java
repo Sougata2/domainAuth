@@ -6,8 +6,14 @@ import com.domain.auth.auth.dto.RegisterDto;
 import com.domain.auth.auth.service.AuthService;
 import com.domain.auth.jwt.properties.JwtProperties;
 import com.domain.auth.jwt.service.JwtService;
+import com.domain.auth.user.dto.UserDto;
 import com.domain.auth.user.entity.UserEntity;
 import com.domain.auth.user.repository.UserRepository;
+import com.domain.mapper.service.MapperService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -18,7 +24,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Key;
 import java.time.LocalDateTime;
+import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +36,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final JwtProperties jwtProperties;
     private final JwtService jwtService;
+    private final MapperService mapper;
 
     @Override
     public UserDetails authenticate(String username, String password) throws AuthenticationException {
@@ -62,5 +71,25 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public UserDto validate(AuthDto dto) {
+        String username = extractToken(dto.token());
+        UserEntity user = userRepository.findByEmail(username).orElseThrow(() -> new EntityNotFoundException("User %s is not found".formatted(username)));
+        return (UserDto) mapper.toDto(user);
+    }
+
+    private String extractToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token).getBody();
+        return claims.getSubject();
+    }
+
+    private Key getSigningKey() {
+        byte[] keyBytes = Base64.getDecoder().decode(jwtProperties.getSecret());
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

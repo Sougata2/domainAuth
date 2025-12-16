@@ -3,6 +3,7 @@ package com.domain.auth.auth.service;
 import com.domain.auth.auth.dto.AuthDto;
 import com.domain.auth.auth.dto.LoginDto;
 import com.domain.auth.auth.dto.RegisterDto;
+import com.domain.auth.user.dto.UserDto;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public interface AuthService {
@@ -11,4 +12,6 @@ public interface AuthService {
     AuthDto login(LoginDto dto);
 
     void register(RegisterDto dto);
+
+    UserDto validate(AuthDto dto);
 }

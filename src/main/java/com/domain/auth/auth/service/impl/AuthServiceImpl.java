@@ -6,6 +6,8 @@ import com.domain.auth.auth.dto.RegisterDto;
 import com.domain.auth.auth.service.AuthService;
 import com.domain.auth.jwt.properties.JwtProperties;
 import com.domain.auth.jwt.service.JwtService;
+import com.domain.auth.role.entity.RoleEntity;
+import com.domain.auth.role.repository.RoleRepository;
 import com.domain.auth.user.dto.UserDto;
 import com.domain.auth.user.entity.UserEntity;
 import com.domain.auth.user.repository.UserRepository;
@@ -27,12 +29,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final JwtProperties jwtProperties;
     private final JwtService jwtService;
@@ -78,6 +83,21 @@ public class AuthServiceImpl implements AuthService {
         String username = extractToken(dto.token());
         UserEntity user = userRepository.findByEmail(username).orElseThrow(() -> new EntityNotFoundException("User %s is not found".formatted(username)));
         return (UserDto) mapper.toDto(user);
+    }
+
+    @Override
+    @Transactional
+    public void registerWithDefaultRole(RegisterDto dto, String roleName) {
+        RoleEntity role = roleRepository.findByName(roleName).orElseThrow(() -> new EntityNotFoundException("Role %s is not found".formatted(roleName)));
+        UserEntity entity = UserEntity.builder()
+                .firstName(dto.firstName())
+                .lastName(dto.lastName())
+                .email(dto.email())
+                .password(dto.password())
+                .roles(new HashSet<>(Set.of(role)))
+                .defaultRole(role)
+                .build();
+        userRepository.save(entity);
     }
 
     private String extractToken(String token) {

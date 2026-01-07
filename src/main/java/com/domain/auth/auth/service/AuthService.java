@@ -14,4 +14,6 @@ public interface AuthService {
     void register(RegisterDto dto);
 
     UserDto validate(AuthDto dto);
+
+    void registerWithDefaultRole(RegisterDto dto, String roleName);
 }

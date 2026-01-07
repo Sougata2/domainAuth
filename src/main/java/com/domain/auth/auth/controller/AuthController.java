@@ -29,6 +29,12 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PostMapping("/register-with-role")
+    public ResponseEntity<Void> registerWithRole(@RequestBody RegisterDto dto, @RequestParam(value = "role") String roleName) {
+        authService.registerWithDefaultRole(dto, roleName);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
     @GetMapping("/verify-user/{username}")
     public ResponseEntity<String> verifyUser(@PathVariable(value = "username") String email) {
         return ResponseEntity.ok(userService.findByEmail(email).getDefaultRole().getName());

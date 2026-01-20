@@ -2,7 +2,11 @@ package com.domain.auth.auth.service.impl;
 
 import com.domain.auth.auth.dto.AuthDto;
 import com.domain.auth.auth.dto.LoginDto;
+import com.domain.auth.auth.dto.RefreshTokenDto;
 import com.domain.auth.auth.dto.RegisterDto;
+import com.domain.auth.auth.entity.RefreshTokenEntity;
+import com.domain.auth.auth.properties.AuthTokenProperties;
+import com.domain.auth.auth.repository.RefreshTokenRepository;
 import com.domain.auth.auth.service.AuthService;
 import com.domain.auth.jwt.properties.JwtProperties;
 import com.domain.auth.jwt.service.JwtService;
@@ -27,16 +31,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Key;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+    private final RefreshTokenRepository refreshTokenRepository;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final AuthTokenProperties tokenProperties;
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final JwtProperties jwtProperties;
@@ -54,7 +62,8 @@ public class AuthServiceImpl implements AuthService {
         try {
             UserDetails user = authenticate(loginDto.email(), loginDto.password());
             String token = jwtService.generateToken(user.getUsername());
-            return new AuthDto(user.getUsername(), token, LocalDateTime.now().plusSeconds(jwtProperties.getExpiration() / 1000));
+            UUID refreshToken = createRefreshToken((UserEntity) user, loginDto.device()).getToken();
+            return new AuthDto(user.getUsername(), token, refreshToken, LocalDateTime.now().plusSeconds(jwtProperties.getExpiration() / 1000));
         } catch (AuthenticationException e) {
             throw new BadCredentialsException("Bad credentials");
         } catch (Exception e) {
@@ -98,6 +107,18 @@ public class AuthServiceImpl implements AuthService {
                 .defaultRole(role)
                 .build();
         userRepository.save(entity);
+    }
+
+    private RefreshTokenDto createRefreshToken(UserEntity user, String device) {
+        RefreshTokenEntity refreshToken = RefreshTokenEntity.builder()
+                .user(user)
+                .token(UUID.randomUUID())
+                .expiresAt(Instant.now().plusMillis(tokenProperties.getRefreshExpiration()))
+                .revoked(false)
+                .device(device)
+                .build();
+        RefreshTokenEntity saved = refreshTokenRepository.save(refreshToken);
+        return (RefreshTokenDto) mapper.toDto(saved);
     }
 
     private String extractToken(String token) {

@@ -1,5 +1,7 @@
 package com.domain.auth.mapper;
 
+import com.domain.auth.auth.dto.RefreshTokenDto;
+import com.domain.auth.auth.entity.RefreshTokenEntity;
 import com.domain.auth.role.dto.RoleDto;
 import com.domain.auth.role.entity.RoleEntity;
 import com.domain.auth.user.dto.UserDto;
@@ -16,7 +18,8 @@ public class Mapping implements com.domain.mapper.mapping.Mapping {
     public Map<Class<? extends MasterEntity>, Class<? extends MasterDto>> getEntityDtoMap() {
         return Map.ofEntries(
                 Map.entry(UserEntity.class, UserDto.class),
-                Map.entry(RoleEntity.class, RoleDto.class)
+                Map.entry(RoleEntity.class, RoleDto.class),
+                Map.entry(RefreshTokenEntity.class, RefreshTokenDto.class)
         );
     }
 
@@ -24,7 +27,8 @@ public class Mapping implements com.domain.mapper.mapping.Mapping {
     public Map<Class<? extends MasterDto>, Class<? extends MasterEntity>> getDtoEntityMap() {
         return Map.ofEntries(
                 Map.entry(UserDto.class, UserEntity.class),
-                Map.entry(RoleDto.class, RoleEntity.class)
+                Map.entry(RoleDto.class, RoleEntity.class),
+                Map.entry(RefreshTokenDto.class, RefreshTokenEntity.class)
         );
     }
 }

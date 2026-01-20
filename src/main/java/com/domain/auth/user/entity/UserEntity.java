@@ -1,5 +1,6 @@
 package com.domain.auth.user.entity;
 
+import com.domain.auth.auth.entity.RefreshTokenEntity;
 import com.domain.auth.role.entity.RoleEntity;
 import com.domain.mapper.references.MasterEntity;
 import jakarta.persistence.*;
@@ -46,6 +47,9 @@ public class UserEntity implements MasterEntity {
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.DETACH})
     @JoinColumn(name = "default_role_id")
     private RoleEntity defaultRole;
+
+    @OneToMany(mappedBy = "user", orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<RefreshTokenEntity> refreshTokens;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

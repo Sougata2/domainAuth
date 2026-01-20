@@ -1,4 +1,4 @@
 package com.domain.auth.auth.dto;
 
-public record LoginDto(String email, String password) {
+public record LoginDto(String email, String password, String device) {
 }

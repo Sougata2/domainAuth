@@ -6,10 +6,13 @@ import com.domain.auth.auth.dto.RegisterDto;
 import com.domain.auth.auth.service.AuthService;
 import com.domain.auth.user.dto.UserDto;
 import com.domain.auth.user.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,8 +22,22 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthDto> login(@RequestBody LoginDto dto) {
-        return ResponseEntity.ok(authService.login(dto));
+    public ResponseEntity<AuthDto> login(@RequestBody LoginDto dto, HttpServletResponse response) {
+        return ResponseEntity.ok(authService.login(dto, response));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@CookieValue(value = "refresh_token", required = false) UUID refreshToken, HttpServletResponse response) {
+        authService.logout(refreshToken, response);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthDto> refresh(
+            @CookieValue(value = "refresh_token") UUID refreshToken,
+            HttpServletResponse response
+    ) {
+        return ResponseEntity.ok(authService.refresh(refreshToken, response));
     }
 
     @PostMapping("/register")

@@ -20,7 +20,10 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -58,12 +61,32 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthDto login(LoginDto loginDto) {
+    public AuthDto login(LoginDto loginDto, HttpServletResponse response) {
         try {
-            UserDetails user = authenticate(loginDto.email(), loginDto.password());
-            String token = jwtService.generateToken(user.getUsername());
-            UUID refreshToken = createRefreshToken((UserEntity) user, loginDto.device()).getToken();
-            return new AuthDto(user.getUsername(), token, refreshToken, LocalDateTime.now().plusSeconds(jwtProperties.getExpiration() / 1000));
+            UserEntity user = (UserEntity) authenticate(loginDto.email(), loginDto.password());
+            String token = jwtService.generateToken(user.getEmail());
+            UUID refreshToken = createRefreshToken(user, loginDto.device()).getToken();
+
+            /*
+            HttpOnly → safe from XSS
+            Secure → HTTPS only
+            SameSite Strict → CSRF safe
+            */
+            ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken.toString())
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("Strict")
+                    .path("/auth/refresh")
+                    .maxAge(tokenProperties.getRefreshExpiration() / 1000)
+                    .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            return new AuthDto(
+                    user.getEmail(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    token,
+                    LocalDateTime.now().plusSeconds(jwtProperties.getExpiration() / 1000)
+            );
         } catch (AuthenticationException e) {
             throw new BadCredentialsException("Bad credentials");
         } catch (Exception e) {
@@ -107,6 +130,76 @@ public class AuthServiceImpl implements AuthService {
                 .defaultRole(role)
                 .build();
         userRepository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public AuthDto refresh(UUID refreshToken, HttpServletResponse response) {
+        RefreshTokenEntity tokenEntity = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new BadCredentialsException("Invalid refresh token"));
+        if (tokenEntity.isRevoked() || tokenEntity.getExpiresAt().isBefore(Instant.now())) {
+            tokenEntity.setRevoked(true);
+            refreshTokenRepository.save(tokenEntity);
+            throw new BadCredentialsException("Refresh token is expired");
+        }
+
+        // rotate refresh token
+        tokenEntity.setRevoked(true);
+        refreshTokenRepository.save(tokenEntity);
+
+        RefreshTokenEntity newToken = refreshTokenRepository.save(
+                RefreshTokenEntity.builder()
+                        .user(tokenEntity.getUser())
+                        .token(UUID.randomUUID())
+                        .expiresAt(Instant.now().plusMillis(tokenProperties.getRefreshExpiration()))
+                        .revoked(false)
+                        .device(tokenEntity.getDevice())
+                        .build()
+        );
+
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", newToken.getToken().toString())
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/auth/refresh")
+                .maxAge(tokenProperties.getRefreshExpiration() / 1000)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        String accessToken = jwtService.generateToken(tokenEntity.getUser().getEmail());
+        return new AuthDto(
+                tokenEntity.getUser().getEmail(),
+                tokenEntity.getUser().getFirstName(),
+                tokenEntity.getUser().getLastName(),
+                accessToken,
+                LocalDateTime.now().plusSeconds(jwtProperties.getExpiration() / 1000)
+        );
+    }
+
+    @Override
+    public void logout(UUID refreshToken, HttpServletResponse response) {
+        if (refreshToken != null) {
+            refreshTokenRepository.findByToken(refreshToken)
+                    .ifPresent((tokenEntity) -> {
+                        tokenEntity.setRevoked(true);
+                        refreshTokenRepository.save(tokenEntity);
+                    });
+        }
+
+        /*
+         HttpOnly → safe from XSS
+         Secure → HTTPS only
+         SameSite Strict → CSRF safe
+        */
+        ResponseCookie delete = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/auth/refresh")
+                .maxAge(0)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, delete.toString());
     }
 
     private RefreshTokenDto createRefreshToken(UserEntity user, String device) {

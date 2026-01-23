@@ -1,6 +1,6 @@
 package com.domain.auth.auth.dto;
 
-import com.domain.auth.user.entity.UserEntity;
+import com.domain.auth.user.dto.UserDto;
 import com.domain.mapper.references.MasterDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +21,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class RefreshTokenDto implements Serializable, MasterDto {
     private Long id;
-    private UserEntity user;
+    private UserDto user;
     private UUID token;
     private Instant expiresAt;
     private boolean revoked;

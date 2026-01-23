@@ -75,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Strict")
-                    .path("/auth/refresh")
+                    .path("auth-service/auth/refresh")
                     .maxAge(tokenProperties.getRefreshExpiration() / 1000)
                     .build();
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -160,7 +160,7 @@ public class AuthServiceImpl implements AuthService {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
-                .path("/auth/refresh")
+                .path("auth-service/auth/refresh")
                 .maxAge(tokenProperties.getRefreshExpiration() / 1000)
                 .build();
 
@@ -196,7 +196,7 @@ public class AuthServiceImpl implements AuthService {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
-                .path("/auth/refresh")
+                .path("auth-service/auth/refresh")
                 .maxAge(0)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, delete.toString());

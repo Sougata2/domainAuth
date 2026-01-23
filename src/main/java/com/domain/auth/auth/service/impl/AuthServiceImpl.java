@@ -1,5 +1,6 @@
 package com.domain.auth.auth.service.impl;
 
+import com.domain.auth.appUser.details.AppUserDetails;
 import com.domain.auth.auth.dto.AuthDto;
 import com.domain.auth.auth.dto.LoginDto;
 import com.domain.auth.auth.dto.RefreshTokenDto;
@@ -8,7 +9,6 @@ import com.domain.auth.auth.entity.RefreshTokenEntity;
 import com.domain.auth.auth.properties.AuthTokenProperties;
 import com.domain.auth.auth.repository.RefreshTokenRepository;
 import com.domain.auth.auth.service.AuthService;
-import com.domain.auth.jwt.properties.JwtProperties;
 import com.domain.auth.jwt.service.JwtService;
 import com.domain.auth.role.entity.RoleEntity;
 import com.domain.auth.role.repository.RoleRepository;
@@ -50,7 +50,6 @@ public class AuthServiceImpl implements AuthService {
     private final AuthTokenProperties tokenProperties;
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
-    private final JwtProperties jwtProperties;
     private final JwtService jwtService;
     private final MapperService mapper;
 
@@ -63,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthDto login(LoginDto loginDto, HttpServletResponse response) {
         try {
-            UserEntity user = (UserEntity) authenticate(loginDto.email(), loginDto.password());
+            UserEntity user = ((AppUserDetails) authenticate(loginDto.email(), loginDto.password())).getEntity();
             String token = jwtService.generateToken(user.getEmail());
             UUID refreshToken = createRefreshToken(user, loginDto.device()).getToken();
 
@@ -85,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
                     user.getFirstName(),
                     user.getLastName(),
                     token,
-                    LocalDateTime.now().plusSeconds(jwtProperties.getExpiration() / 1000)
+                    LocalDateTime.now().plusSeconds(tokenProperties.getAccessExpiration() / 1000)
             );
         } catch (AuthenticationException e) {
             throw new BadCredentialsException("Bad credentials");
@@ -173,7 +172,7 @@ public class AuthServiceImpl implements AuthService {
                 tokenEntity.getUser().getFirstName(),
                 tokenEntity.getUser().getLastName(),
                 accessToken,
-                LocalDateTime.now().plusSeconds(jwtProperties.getExpiration() / 1000)
+                LocalDateTime.now().plusSeconds(tokenProperties.getAccessExpiration() / 1000)
         );
     }
 
@@ -223,7 +222,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private Key getSigningKey() {
-        byte[] keyBytes = Base64.getDecoder().decode(jwtProperties.getSecret());
+        byte[] keyBytes = Base64.getDecoder().decode(tokenProperties.getSecret());
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

@@ -1,6 +1,6 @@
 package com.domain.auth.jwt.service.impl;
 
-import com.domain.auth.jwt.properties.JwtProperties;
+import com.domain.auth.auth.properties.AuthTokenProperties;
 import com.domain.auth.jwt.service.JwtService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -16,7 +16,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
-    private final JwtProperties properties;
+    private final AuthTokenProperties properties;
 
     @Override
     public String generateToken(String username) {
@@ -26,7 +26,7 @@ public class JwtServiceImpl implements JwtService {
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + properties.getExpiration()))
+                .setExpiration(new Date(System.currentTimeMillis() + properties.getAccessExpiration()))
                 .signWith(getSigningKey())
                 .compact();
     }

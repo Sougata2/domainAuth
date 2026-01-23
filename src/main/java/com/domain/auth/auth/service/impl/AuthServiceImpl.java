@@ -177,6 +177,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void logout(UUID refreshToken, HttpServletResponse response) {
         if (refreshToken != null) {
             refreshTokenRepository.findByToken(refreshToken)

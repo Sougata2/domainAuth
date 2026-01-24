@@ -71,14 +71,24 @@ public class AuthServiceImpl implements AuthService {
             Secure → HTTPS only
             SameSite Strict → CSRF safe
             */
-            ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken.toString())
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken.toString())
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Strict")
                     .path("/auth-service/auth")
                     .maxAge(tokenProperties.getRefreshExpiration() / 1000)
                     .build();
-            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+            ResponseCookie accessCookie = ResponseCookie.from(HttpHeaders.AUTHORIZATION, token)
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("Strict")
+                    .path("/chat-service/users/stream")
+                    .maxAge(tokenProperties.getAccessExpiration() / 1000)
+                    .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+            response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+
             return new AuthDto(
                     user.getEmail(),
                     user.getFirstName(),
@@ -156,7 +166,9 @@ public class AuthServiceImpl implements AuthService {
                         .build()
         );
 
-        ResponseCookie cookie = ResponseCookie.from("refresh_token", newToken.getToken().toString())
+        String accessToken = jwtService.generateToken(tokenEntity.getUser().getEmail());
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", newToken.getToken().toString())
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
@@ -164,9 +176,17 @@ public class AuthServiceImpl implements AuthService {
                 .maxAge(tokenProperties.getRefreshExpiration() / 1000)
                 .build();
 
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        ResponseCookie accessCookie = ResponseCookie.from(HttpHeaders.AUTHORIZATION, accessToken)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/chat-service/users/stream")
+                .maxAge(tokenProperties.getAccessExpiration() / 1000)
+                .build();
 
-        String accessToken = jwtService.generateToken(tokenEntity.getUser().getEmail());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+
         return new AuthDto(
                 tokenEntity.getUser().getEmail(),
                 tokenEntity.getUser().getFirstName(),
@@ -192,14 +212,15 @@ public class AuthServiceImpl implements AuthService {
          Secure → HTTPS only
          SameSite Strict → CSRF safe
         */
-        ResponseCookie delete = ResponseCookie.from("refresh_token", "")
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
                 .path("/auth-service/auth")
                 .maxAge(0)
                 .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, delete.toString());
+
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
     }
 
     private RefreshTokenDto createRefreshToken(UserEntity user, String device) {

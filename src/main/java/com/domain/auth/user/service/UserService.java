@@ -8,4 +8,6 @@ public interface UserService {
     UserDto findByEmail(String email);
 
     UserInfo getUserInfo(String email);
+    
+    UserInfo getUserById(Long id);
 }

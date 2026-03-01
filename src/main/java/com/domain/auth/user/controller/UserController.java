@@ -19,4 +19,9 @@ public class UserController {
     public ResponseEntity<UserInfo> getUserInfo(@PathVariable String email) {
         return ResponseEntity.ok(service.getUserInfo(email));
     }
+
+    @GetMapping("/id/{id}")
+    public ResponseEntity<UserInfo> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getUserById(id));
+    }
 }

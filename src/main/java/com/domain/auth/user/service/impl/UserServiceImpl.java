@@ -2,6 +2,7 @@ package com.domain.auth.user.service.impl;
 
 import com.domain.auth.user.dto.UserDto;
 import com.domain.auth.user.entity.UserEntity;
+import com.domain.auth.user.projection.UserInfo;
 import com.domain.auth.user.repository.UserRepository;
 import com.domain.auth.user.service.UserService;
 import com.domain.mapper.service.MapperService;
@@ -28,5 +29,11 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public UserInfo getUserInfo(String email) {
+        return repository.getUserInfo(email)
+                .orElseThrow(() -> new EntityNotFoundException("User with email %s not found".formatted(email)));
     }
 }

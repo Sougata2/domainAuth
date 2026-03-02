@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -41,5 +42,10 @@ public class UserServiceImpl implements UserService {
     public UserInfo getUserById(Long id) {
         return repository.getUserById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User with email %d not found".formatted(id)));
+    }
+
+    @Override
+    public List<UserInfo> getAllUsers() {
+        return repository.getAllUsers();
     }
 }

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
@@ -23,5 +25,10 @@ public class UserController {
     @GetMapping("/id/{id}")
     public ResponseEntity<UserInfo> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getUserById(id));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<UserInfo>> getAllUsers() {
+        return ResponseEntity.ok(service.getAllUsers());
     }
 }

@@ -90,6 +90,7 @@ public class AuthServiceImpl implements AuthService {
             response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
             return new AuthDto(
+                    user.getId(),
                     user.getEmail(),
                     user.getFirstName(),
                     user.getLastName(),
@@ -188,6 +189,7 @@ public class AuthServiceImpl implements AuthService {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
         return new AuthDto(
+                tokenEntity.getUser().getId(),
                 tokenEntity.getUser().getEmail(),
                 tokenEntity.getUser().getFirstName(),
                 tokenEntity.getUser().getLastName(),

@@ -21,4 +21,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     @Query("select e from UserEntity e")
     List<UserInfo> getAllUsers();
+
+    @Query("select e from UserEntity e where e.id in :ids")
+    List<UserInfo> getAllUsersByIds(List<Long> ids);
 }

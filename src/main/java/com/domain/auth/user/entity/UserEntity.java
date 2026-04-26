@@ -36,7 +36,7 @@ public class UserEntity implements MasterEntity {
     @Column
     private String password;
 
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToMany
     @JoinTable(
             name = "user_role_map",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -44,7 +44,7 @@ public class UserEntity implements MasterEntity {
     )
     private Set<RoleEntity> roles;
 
-    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne
     @JoinColumn(name = "default_role_id")
     private RoleEntity defaultRole;
 

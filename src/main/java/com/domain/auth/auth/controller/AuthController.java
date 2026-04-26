@@ -3,6 +3,7 @@ package com.domain.auth.auth.controller;
 import com.domain.auth.auth.dto.AuthDto;
 import com.domain.auth.auth.dto.LoginDto;
 import com.domain.auth.auth.dto.RegisterDto;
+import com.domain.auth.auth.dto.ResetPasswordDto;
 import com.domain.auth.auth.service.AuthService;
 import com.domain.auth.user.dto.UserDto;
 import com.domain.auth.user.service.UserService;
@@ -60,5 +61,11 @@ public class AuthController {
     @PostMapping("/validate")
     public ResponseEntity<UserDto> validate(@RequestBody AuthDto dto) {
         return ResponseEntity.ok(authService.validate(dto));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordDto dto) {
+        authService.resetPassword(dto);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

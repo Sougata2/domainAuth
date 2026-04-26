@@ -1,10 +1,7 @@
 package com.domain.auth.auth.service.impl;
 
 import com.domain.auth.appUser.details.AppUserDetails;
-import com.domain.auth.auth.dto.AuthDto;
-import com.domain.auth.auth.dto.LoginDto;
-import com.domain.auth.auth.dto.RefreshTokenDto;
-import com.domain.auth.auth.dto.RegisterDto;
+import com.domain.auth.auth.dto.*;
 import com.domain.auth.auth.entity.RefreshTokenEntity;
 import com.domain.auth.auth.properties.AuthTokenProperties;
 import com.domain.auth.auth.repository.RefreshTokenRepository;
@@ -30,6 +27,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -223,6 +221,14 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordDto dto) {
+        UserEntity userEntity = ((AppUserDetails) authenticate(dto.email(), dto.currentPassword())).getEntity();
+        String newPassword = PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(dto.newPassword());
+        userEntity.setPassword(newPassword);
+        userRepository.save(userEntity);
     }
 
     private RefreshTokenDto createRefreshToken(UserEntity user, String device) {
